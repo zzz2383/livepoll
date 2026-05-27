@@ -1,11 +1,9 @@
 # polls/services.py
 from .models import Poll
-
 from .repositories import PollRepository, VoteRepository
 from .infrastructure.redis_counter import RedisVoteCounter
-from .infrastructure.redis_publisher import RedisPublisher
-from django.core.exceptions import PermissionDenied
 from .infrastructure.message_sender import MessageSender
+from django.core.exceptions import PermissionDenied
 
 class PollService:
     def __init__(self):
@@ -31,25 +29,17 @@ class PollService:
             raise PermissionDenied("You have already voted in this poll")
         valid_option_ids = set(poll.options.values_list('id', flat=True))
         for oid in option_ids:
-            new_count = self.counter.incr(poll_id, oid)
-            # 获取当前总票数（可汇总，简化处理）
-            # 这里我们暂时传一个估算，前端也可以自行重算
-            self.sender.send_vote_update(poll_id, oid, new_count, None)
+            if oid not in valid_option_ids:
+                raise ValueError(f"Option {oid} does not belong to this poll")
         
-        # 1. 记录投票到 SQLite（防重）
+        # 1. 持久化投票记录到 SQLite（防重）
         self.vote_repo.record_vote(user, poll, option_ids)
         
-        # 2. Redis 原子递增并发布消息
-        total_increment = 0
+        # 2. Redis 原子递增并推送实时消息
         for oid in option_ids:
             new_count = self.counter.incr(poll_id, oid)
-            total_increment += 1
-            # 发布实时消息（这里简化，每个选项单独推送）
-            self.publisher.publish_vote_update(
-                poll_id, oid, new_count,
-                # 这里暂用估算的总票数，精确总数可由前端自行累加，或另算
-                total_votes=None  # 可不发，前端可以通过累加所有选项计数得到
-            )
+            # 通过 MessageSender 向 Channels group 发送消息
+            self.sender.send_vote_update(poll_id, oid, new_count, None)
         
         # 3. 返回更新后的投票详情（从 Redis 读取最新计数）
         return self.get_poll_detail(poll_id)
@@ -59,15 +49,13 @@ class PollService:
         return [self._poll_to_dict(p) for p in polls]
 
     def _poll_to_dict(self, poll: Poll) -> dict:
-        # 从模型获取选项 ID 和文本，从 Redis 获取实时计数
         options_qs = poll.options.all()
         option_ids = [opt.id for opt in options_qs]
-        # 尝试从 Redis 获取计数，如果不存在则回退到模型的 vote_count
         redis_counts = self.counter.get_counts(poll.id, option_ids)
         options = []
         total_votes = 0
         for opt in options_qs:
-            count = redis_counts.get(opt.id, opt.vote_count)  # 若 Redis 无数据则用 DB 字段
+            count = redis_counts.get(opt.id, opt.vote_count)
             options.append({
                 'id': opt.id,
                 'text': opt.text,
