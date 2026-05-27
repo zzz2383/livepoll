@@ -41,6 +41,7 @@ INSTALLED_APPS = [
         # 第三方
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  
     'corsheaders',
     'channels',          # 添加
     # 本地应用
