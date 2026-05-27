@@ -117,16 +117,15 @@ onUnmounted(() => {
 
         <PollChart :options="pollStore.currentPoll.options" />
 
-        <div class="options">
-            <div v-for="opt in pollStore.currentPoll.options" :key="opt.id"
-                :class="['option', { selected: selectedOptions.includes(opt.id) }]"
-                @click="isOpen && !hasVoted && toggleOption(opt.id)">
-                <span class="option-text">{{ opt.text }}</span>
-                <div class="bar-bg">
-                    <div class="bar-fill" :style="{ width: getPercentage(opt.count) + '%' }"></div>
-                </div>
-                <span class="count">{{ opt.count }} 票</span>
+        <div v-for="opt in pollStore.currentPoll.options" :key="opt.id"
+            :class="['option', { selected: selectedOptions.includes(opt.id) }]"
+            @click="isOpen && !hasVoted && toggleOption(opt.id)">
+            <span class="check-mark">{{ selectedOptions.includes(opt.id) ? '✓' : '' }}</span>
+            <span class="option-text">{{ opt.text }}</span>
+            <div class="bar-bg">
+                <div class="bar-fill" :style="{ width: getPercentage(opt.count) + '%' }"></div>
             </div>
+            <span class="count">{{ opt.count }} 票</span>
         </div>
 
         <div v-if="isOpen && !hasVoted" class="vote-action">
@@ -182,17 +181,56 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 0;
+    padding: 12px 14px;
+    margin: 8px 0;
+    border-radius: 14px;
     cursor: pointer;
+    border: 2px solid transparent;
+    background: rgba(255, 255, 255, 0.6);
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
 }
 
-.option.selected .option-text {
-    color: #4f46e5;
-    font-weight: 600;
+.option:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(79, 70, 229, 0.25);
+    transform: translateX(4px);
+}
+
+.option.selected {
+    background: #eef2ff;
+    border-color: #4f46e5;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    transform: scale(1.02);
+    font-weight: 500;
+}
+
+.check-mark {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.option.selected .check-mark {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .option-text {
     flex: 1;
+    font-size: 1rem;
 }
 
 .bar-bg {
