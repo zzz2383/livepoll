@@ -3,6 +3,8 @@ import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
+import CreatePollView from '@/views/CreatePollView.vue'
+import PollDetailView from '@/views/PollDetailView.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -24,11 +26,22 @@ const router = createRouter({
             name: 'register',
             component: RegisterView,
             meta: { guest: true }
+        },
+        {
+            path: '/polls/create',
+            name: 'create-poll',
+            component: CreatePollView,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/polls/:id',
+            name: 'poll-detail',
+            component: PollDetailView,
+            meta: { requiresAuth: true }
         }
     ]
 })
 
-// 路由守卫
 router.beforeEach((to, _from, next) => {
     const authStore = useAuthStore()
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
