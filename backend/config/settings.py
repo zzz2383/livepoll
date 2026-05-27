@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'channels',          # 添加
     # 本地应用
     'users',
     'polls',
@@ -157,4 +158,17 @@ CACHES = {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
+}
+
+# 设置 ASGI 应用
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Channels 层配置（使用 Redis 作为通道层）
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
 }
