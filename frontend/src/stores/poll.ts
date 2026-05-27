@@ -13,11 +13,25 @@ export const usePollStore = defineStore('poll', () => {
     const currentPoll = ref<PollDetail | null>(null)
     const loading = ref(false)
     const error = ref<string | null>(null)
+    const participatedPolls = ref<PollListItem[]>([])
 
     // WebSocket 实例管理（一个投票一个连接）
     const activeWebSocket = ref<PollWebSocket | null>(null)
 
     // --- 动作 ---
+
+    async function fetchParticipatedPolls() {
+        loading.value = true
+        error.value = null
+        try {
+            participatedPolls.value = await pollApi.getParticipatedPolls()
+        } catch (err: any) {
+            error.value = err.response?.data?.error || 'Failed to load participated polls'
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
 
     // 获取我的投票列表
     async function fetchMyPolls() {
@@ -121,10 +135,12 @@ export const usePollStore = defineStore('poll', () => {
         currentPoll,
         loading,
         error,
+        participatedPolls,
         fetchMyPolls,
         fetchPollDetail,
         createPoll,
         submitVote,
-        closeWebSocket
+        closeWebSocket,
+        fetchParticipatedPolls
     }
 })

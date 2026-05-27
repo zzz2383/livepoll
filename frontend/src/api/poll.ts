@@ -25,5 +25,10 @@ export const pollApi = {
     // 提交投票
     vote(pollId: number, data: VoteRequest): Promise<PollDetail> {
         return apiClient.post(`/polls/${pollId}/vote/`, data)
+    },
+
+    // 获取参与过的投票列表
+    getParticipatedPolls(): Promise<PollListItem[]> {
+        return apiClient.get('/polls/participated/')
     }
 }
