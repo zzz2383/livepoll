@@ -34,9 +34,7 @@ class VoteRepository:
             for oid in option_ids:
                 option = Option.objects.get(pk=oid, poll=poll)
                 VoteRecord.objects.create(user=user, poll=poll, option=option)
-                # 同步增加计数器（后续可替换为 Redis）
-                option.vote_count += 1
-                option.save()
+                # 不再增加 vote_count 字段，该字段由 Redis 定期同步或直接从 Redis 读取
 
     def get_option_counts(self, poll: Poll) -> dict[int, int]:
         """获取各选项当前票数（从 SQLite 读取）"""

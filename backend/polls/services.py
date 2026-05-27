@@ -2,18 +2,20 @@
 from .models import Poll
 
 from .repositories import PollRepository, VoteRepository
+from .infrastructure.redis_counter import RedisVoteCounter
+from .infrastructure.redis_publisher import RedisPublisher
 from django.core.exceptions import PermissionDenied
+from .infrastructure.message_sender import MessageSender
 
 class PollService:
     def __init__(self):
         self.poll_repo = PollRepository()
         self.vote_repo = VoteRepository()
+        self.counter = RedisVoteCounter()
+        self.sender = MessageSender()
 
     def create_poll(self, user, title: str, options: list[str], 
                     is_multiple: bool = False, closes_at=None) -> dict:
-        """
-        返回值与接口层约定的字典，包含 Poll 信息
-        """
         poll = self.poll_repo.create_poll(title, options, user, is_multiple, closes_at)
         return self._poll_to_dict(poll)
 
@@ -27,27 +29,51 @@ class PollService:
             raise PermissionDenied("Poll has closed")
         if self.vote_repo.has_voted(user, poll):
             raise PermissionDenied("You have already voted in this poll")
-        # 校验选项是否属于该投票
         valid_option_ids = set(poll.options.values_list('id', flat=True))
         for oid in option_ids:
-            if oid not in valid_option_ids:
-                raise ValueError(f"Option {oid} does not belong to this poll")
+            new_count = self.counter.incr(poll_id, oid)
+            # 获取当前总票数（可汇总，简化处理）
+            # 这里我们暂时传一个估算，前端也可以自行重算
+            self.sender.send_vote_update(poll_id, oid, new_count, None)
+        
+        # 1. 记录投票到 SQLite（防重）
         self.vote_repo.record_vote(user, poll, option_ids)
-        # 返回更新后的投票详情
+        
+        # 2. Redis 原子递增并发布消息
+        total_increment = 0
+        for oid in option_ids:
+            new_count = self.counter.incr(poll_id, oid)
+            total_increment += 1
+            # 发布实时消息（这里简化，每个选项单独推送）
+            self.publisher.publish_vote_update(
+                poll_id, oid, new_count,
+                # 这里暂用估算的总票数，精确总数可由前端自行累加，或另算
+                total_votes=None  # 可不发，前端可以通过累加所有选项计数得到
+            )
+        
+        # 3. 返回更新后的投票详情（从 Redis 读取最新计数）
         return self.get_poll_detail(poll_id)
 
     def list_my_polls(self, user) -> list[dict]:
         polls = self.poll_repo.list_polls_by_user(user)
         return [self._poll_to_dict(p) for p in polls]
 
-    def _poll_to_dict(self, poll: Poll) -> dict: 
+    def _poll_to_dict(self, poll: Poll) -> dict:
+        # 从模型获取选项 ID 和文本，从 Redis 获取实时计数
+        options_qs = poll.options.all()
+        option_ids = [opt.id for opt in options_qs]
+        # 尝试从 Redis 获取计数，如果不存在则回退到模型的 vote_count
+        redis_counts = self.counter.get_counts(poll.id, option_ids)
         options = []
-        for opt in poll.options.all():
+        total_votes = 0
+        for opt in options_qs:
+            count = redis_counts.get(opt.id, opt.vote_count)  # 若 Redis 无数据则用 DB 字段
             options.append({
                 'id': opt.id,
                 'text': opt.text,
-                'count': opt.vote_count
+                'count': count
             })
+            total_votes += count
         return {
             'id': poll.id,
             'title': poll.title,
@@ -55,7 +81,7 @@ class PollService:
             'is_multiple': poll.is_multiple,
             'closes_at': poll.closes_at.isoformat() if poll.closes_at else None,
             'created_by': poll.created_by.username,
-            'total_votes': sum(o.vote_count for o in poll.options.all()),
+            'total_votes': total_votes,
             'is_closed': poll.is_closed(),
             'created_at': poll.created_at.isoformat()
         }
