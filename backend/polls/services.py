@@ -86,3 +86,7 @@ class PollService:
             self.poll_repo.close_poll(poll)
             # 通过 WebSocket 通知所有监听者投票已关闭
         self.sender.send_poll_closed(poll.id)
+
+    def list_participated_polls(self, user) -> list[dict]:
+        polls = self.vote_repo.get_participated_polls(user)
+        return [self._poll_to_dict(p) for p in polls]

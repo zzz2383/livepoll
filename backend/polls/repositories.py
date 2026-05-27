@@ -46,3 +46,9 @@ class VoteRepository:
     def get_option_counts(self, poll: Poll) -> dict[int, int]:
         """获取各选项当前票数（从 SQLite 读取）"""
         return {opt.id: opt.vote_count for opt in poll.options.all()}
+    
+    def get_participated_polls(self, user):
+        voted_poll_ids = VoteRecord.objects.filter(user=user).values_list('poll_id', flat=True).distinct()
+        # 按最近投票时间排序，可以用 Poll.created_at 或 VoteRecord.voted_at
+        polls = Poll.objects.filter(id__in=voted_poll_ids).order_by('-created_at')
+        return polls

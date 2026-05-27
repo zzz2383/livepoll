@@ -56,3 +56,11 @@ class PollVoteView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class ParticipatedPollsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = PollService()
+        polls = service.list_participated_polls(request.user)
+        return Response(polls)
