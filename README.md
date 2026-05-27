@@ -48,7 +48,7 @@ pip install -r requirements.txt
 python manage.py migrate  
 
 
-# 确保 Redis 正在运行，默认端口 6379
+## 确保 Redis 正在运行，默认端口 6379
 redis-server  # 启动 Redis 服务，默认端口 6379（Linux / macOS）  
 
 
