@@ -23,9 +23,6 @@ function goToPoll(pollId: number) {
     router.push(`/polls/${pollId}`)
 }
 
-function goToCreate() {
-    router.push('/polls/create')
-}
 
 function handleLogout() {
     authStore.logout()
@@ -42,10 +39,6 @@ function handleLogout() {
                 <button @click="handleLogout" class="btn-outline">退出登录</button>
             </div>
         </header>
-
-        <div class="actions">
-            <button @click="goToCreate" class="btn-primary">＋ 创建新投票</button>
-        </div>
 
         <div class="tabs">
             <button :class="{ active: activeTab === 'created' }" @click="activeTab = 'created'">我创建的</button>
