@@ -17,9 +17,9 @@ class PollService:
         poll = self.poll_repo.create_poll(title, options, user, is_multiple, closes_at)
         return self._poll_to_dict(poll)
 
-    def get_poll_detail(self, poll_id: int) -> dict:
+    def get_poll_detail(self, poll_id: int, user=None) -> dict:
         poll = self.poll_repo.get_poll_by_id(poll_id)
-        return self._poll_to_dict(poll)
+        return self._poll_to_dict(poll, user)
 
     def vote(self, user, poll_id: int, option_ids: list[int]) -> dict:
         poll = self.poll_repo.get_poll_by_id(poll_id)
@@ -42,13 +42,16 @@ class PollService:
             self.sender.send_vote_update(poll_id, oid, new_count, None)
         
         # 3. 返回更新后的投票详情（从 Redis 读取最新计数）
-        return self.get_poll_detail(poll_id)
+        return self.get_poll_detail(poll_id, user)
 
     def list_my_polls(self, user) -> list[dict]:
         polls = self.poll_repo.list_polls_by_user(user)
         return [self._poll_to_dict(p) for p in polls]
 
-    def _poll_to_dict(self, poll: Poll) -> dict:
+    def _poll_to_dict(self, poll: Poll, user=None) -> dict:
+        has_voted = False
+        if user and user.is_authenticated:
+            has_voted = self.vote_repo.has_voted(user, poll)
         options_qs = poll.options.all()
         option_ids = [opt.id for opt in options_qs]
         redis_counts = self.counter.get_counts(poll.id, option_ids)
@@ -71,5 +74,6 @@ class PollService:
             'created_by': poll.created_by.username,
             'total_votes': total_votes,
             'is_closed': poll.is_closed(),
-            'created_at': poll.created_at.isoformat()
+            'created_at': poll.created_at.isoformat(),
+            'has_voted': has_voted
         }
