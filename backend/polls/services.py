@@ -84,8 +84,9 @@ class PollService:
         expired_polls = self.poll_repo.get_expired_open_polls(now)
         for poll in expired_polls:
             self.poll_repo.close_poll(poll)
-            # 通过 WebSocket 通知所有监听者投票已关闭
-        self.sender.send_poll_closed(poll.id)
+        if expired_polls:
+            # 通知最后一个（或采取其他聚合逻辑）
+            self.sender.send_poll_closed(expired_polls[-1].id)
 
     def list_participated_polls(self, user) -> list[dict]:
         polls = self.vote_repo.get_participated_polls(user)
