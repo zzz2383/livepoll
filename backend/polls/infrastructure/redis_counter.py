@@ -1,4 +1,6 @@
 # polls/infrastructure/redis_counter.py
+import os
+
 import redis
 from django.conf import settings
 
@@ -7,9 +9,9 @@ class RedisVoteCounter:
     
     def __init__(self):
         # 使用 Django 的 Redis 缓存连接（或直接连接）
-        self.redis_client = redis.Redis(
-            host='127.0.0.1', port=6379, db=0, decode_responses=True
-        )
+        redis_host = os.environ.get('REDIS_HOST', '127.0.0.1')
+        redis_port = int(os.environ.get('REDIS_PORT', 6379))
+        self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=0)
     
     def incr(self, poll_id: int, option_id: int) -> int:
         key = f"vote:{poll_id}:option:{option_id}"

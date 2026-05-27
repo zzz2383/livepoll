@@ -1,0 +1,4 @@
+# 在 livepoll/frontend 目录下执行（如果前端在子目录）
+echo "node_modules" >> .dockerignore
+echo "dist" >> .dockerignore
+echo ".git" >> .dockerignore

@@ -20,6 +20,17 @@ git clone https://github.com/zzz2383/livepoll.git
 
 cd livepoll
 
+## 一键部署（Docker Compose）
+
+1. 安装 Docker 和 Docker Compose   
+
+2. 启动所有服务：  
+
+   ```bash  
+
+   docker-compose --env-file .env.production up -d  
+
+
 ### 2. 后端设置
 cd backend  
 

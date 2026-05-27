@@ -1,0 +1,37 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build: ./backend
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      - REDIS_HOST=redis # 关键：指向 redis 服务名
+      - REDIS_PORT=6379
+      - DJANGO_SECRET_KEY=739266904c96c951cddca52f9ee70137e4e9e798b88034d83e406efc5075aa97
+      - DJANGO_DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/db.sqlite3:/app/db.sqlite3
+
+  frontend:
+    build: ./frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  redis_data:
