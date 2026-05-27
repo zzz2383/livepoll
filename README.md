@@ -16,31 +16,44 @@
 ## 快速开始
 
 ### 1. 克隆仓库
-git clone https://github.com/zzz2383/livepoll.git
+git clone https://github.com/zzz2383/livepoll.git  
+
 cd livepoll
 
 ### 2. 后端设置
-cd backend
-python -m venv venv
+cd backend  
 
-venv\Scripts\activate  # Windows
-或者
-source venv/bin/activate  # Linux / macOS
+python -m venv venv  
 
-pip install -r requirements.txt
-python manage.py migrate
+venv\Scripts\activate  # Windows  
+
+或者  
+
+source venv/bin/activate  # Linux / macOS  
+
+pip install -r requirements.txt  
+
+
+python manage.py migrate  
+
 
 # 确保 Redis 正在运行，默认端口 6379
-redis-server  # 启动 Redis 服务，默认端口 6379（Linux / macOS）
-或者
-memurai.exe  # 启动 Memurai 服务，默认端口 6379（Windows）
+redis-server  # 启动 Redis 服务，默认端口 6379（Linux / macOS）  
 
-daphne config.asgi:application  # 启动后端服务，默认端口 8000
+
+或者  
+  
+memurai.exe  # 启动 Memurai 服务，默认端口 6379（Windows）  
+
+daphne config.asgi:application  # 启动后端服务，默认端口 8000  
+
 
 ### 3. 前端设置
-cd frontend
-npm install
-npm run dev
+cd frontend  
+
+npm install  
+
+npm run dev  
 
 ### 4. 访问
 打开 http://localhost:3000
