@@ -13,13 +13,13 @@ const confirmPassword = ref('')
 const error = ref('')
 const loading = ref(false)
 
-async function handleRegister() {
+async function handleSubmit() {
     if (!username.value || !password.value) {
-        error.value = 'Username and password are required'
+        error.value = '用户名和密码不能为空'
         return
     }
     if (password.value !== confirmPassword.value) {
-        error.value = 'Passwords do not match'
+        error.value = '两次输入的密码不一致'
         return
     }
     loading.value = true
@@ -32,7 +32,7 @@ async function handleRegister() {
         })
         router.push('/')
     } catch (err: any) {
-        error.value = err.response?.data?.error || 'Registration failed'
+        error.value = err.response?.data?.error || '注册失败'
     } finally {
         loading.value = false
     }
@@ -40,43 +40,38 @@ async function handleRegister() {
 </script>
 
 <template>
-    <div class="auth-container">
-        <h1>Register</h1>
-        <form @submit.prevent="handleRegister">
-            <div>
-                <label>Username</label>
+    <div class="auth-container card">
+        <h1>注册</h1>
+        <form @submit.prevent="handleSubmit">
+            <div class="field">
+                <label>用户名</label>
                 <input v-model="username" type="text" required />
             </div>
-            <div>
-                <label>Email (optional)</label>
+            <div class="field">
+                <label>邮箱 <span>（选填）</span></label>
                 <input v-model="email" type="email" />
             </div>
-            <div>
-                <label>Password</label>
+            <div class="field">
+                <label>密码</label>
                 <input v-model="password" type="password" required />
             </div>
-            <div>
-                <label>Confirm Password</label>
+            <div class="field">
+                <label>确认密码</label>
                 <input v-model="confirmPassword" type="password" required />
             </div>
             <p v-if="error" class="error">{{ error }}</p>
-            <button type="submit" :disabled="loading">
-                {{ loading ? 'Registering...' : 'Register' }}
+            <button type="submit" :disabled="loading" class="btn-primary">
+                {{ loading ? '注册中...' : '注册' }}
             </button>
         </form>
-        <p>
-            Already have an account? <router-link to="/login">Login</router-link>
+        <p class="switch">
+            已有账号？<router-link to="/login">去登录</router-link>
         </p>
     </div>
 </template>
 
 <style scoped>
 .auth-container {
-    max-width: 400px;
-    margin: 50px auto;
-}
-
-.error {
-    color: red;
+    margin-top: 10vh;
 }
 </style>

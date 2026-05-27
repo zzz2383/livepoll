@@ -35,47 +35,44 @@ function handleLogout() {
 
 <template>
     <div class="home">
-        <header>
-            <h1>LivePoll</h1>
+        <header class="home-header card">
+            <h1>实时投票</h1>
             <div class="user-bar">
-                <span>Welcome, {{ authStore.user?.username }}</span>
-                <button @click="handleLogout">Logout</button>
+                <span>👋 {{ authStore.user?.username }}</span>
+                <button @click="handleLogout" class="btn-outline">退出登录</button>
             </div>
         </header>
 
         <div class="actions">
-            <button @click="goToCreate" class="btn-primary">Create New Poll</button>
+            <button @click="goToCreate" class="btn-primary">＋ 创建新投票</button>
         </div>
 
-        <!-- 标签切换 -->
         <div class="tabs">
-            <button :class="{ active: activeTab === 'created' }" @click="activeTab = 'created'">
-                My Polls
-            </button>
-            <button :class="{ active: activeTab === 'participated' }" @click="activeTab = 'participated'">
-                Participated
-            </button>
+            <button :class="{ active: activeTab === 'created' }" @click="activeTab = 'created'">我创建的</button>
+            <button :class="{ active: activeTab === 'participated' }" @click="activeTab = 'participated'">我参与的</button>
         </div>
 
-        <div v-if="pollStore.loading">Loading...</div>
-        <div v-else-if="pollStore.error" class="error">{{ pollStore.error }}</div>
-        <div v-else-if="currentPolls.length === 0">
-            <p v-if="activeTab === 'created'">No polls yet. Create your first one!</p>
-            <p v-else>You haven't participated in any polls yet.</p>
+        <div v-if="pollStore.loading" class="loading">加载中...</div>
+        <div v-else-if="pollStore.error" class="error card">{{ pollStore.error }}</div>
+        <div v-else-if="currentPolls.length === 0" class="card empty">
+            <p v-if="activeTab === 'created'">还没有创建任何投票，立即创建一个吧！</p>
+            <p v-else>还没有参与任何投票。</p>
         </div>
-        <ul v-else class="poll-list">
-            <li v-for="poll in currentPolls" :key="poll.id" @click="goToPoll(poll.id)">
+        <div v-else class="poll-list">
+            <div v-for="poll in currentPolls" :key="poll.id" class="poll-item card" @click="goToPoll(poll.id)">
                 <h3>{{ poll.title }}</h3>
-                <span>Total votes: {{ poll.total_votes }}</span>
-                <span v-if="poll.is_closed" class="closed">Closed</span>
-            </li>
-        </ul>
+                <div class="meta">
+                    <span>{{ poll.total_votes }} 票</span>
+                    <span v-if="poll.is_closed" class="closed">已结束</span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <style scoped>
 .home {
-    max-width: 600px;
+    max-width: 720px;
     margin: 20px auto;
 }
 
@@ -106,12 +103,13 @@ header {
     border: 1px solid #ccc;
     background: #f9f9f9;
     cursor: pointer;
+    border-radius: 10px;
 }
 
 .tabs button.active {
-    background: #42b983;
+    background: #4f46e5;
     color: white;
-    border-color: #42b983;
+    border-color: #4f46e5;
 }
 
 .poll-list {
@@ -119,28 +117,44 @@ header {
     padding: 0;
 }
 
-.poll-list li {
-    border: 1px solid #ddd;
-    padding: 10px;
-    margin: 5px 0;
+.poll-item {
+    padding: 1.2rem;
+    margin-bottom: 0.8rem;
     cursor: pointer;
+    transition: 0.15s;
 }
 
-.poll-list li:hover {
-    background-color: #f0f0f0;
+.poll-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #64748b;
 }
 
 .closed {
-    color: red;
-    margin-left: 10px;
+    color: #ef4444;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
 }
 
 .error {
-    color: red;
+    color: #ef4444;
+    margin-top: 0.5rem;
 }
 
-.btn-primary {
-    padding: 8px 16px;
-    cursor: pointer;
+.empty {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
 }
 </style>

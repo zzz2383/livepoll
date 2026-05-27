@@ -11,9 +11,9 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 
-async function handleLogin() {
+async function handleSubmit() {
     if (!username.value || !password.value) {
-        error.value = 'Username and password are required'
+        error.value = '请输入用户名和密码'
         return
     }
     loading.value = true
@@ -22,7 +22,7 @@ async function handleLogin() {
         await authStore.login({ username: username.value, password: password.value })
         router.push('/')
     } catch (err: any) {
-        error.value = err.response?.data?.error || 'Login failed'
+        error.value = err.response?.data?.error || '登录失败'
     } finally {
         loading.value = false
     }
@@ -30,35 +30,30 @@ async function handleLogin() {
 </script>
 
 <template>
-    <div class="auth-container">
-        <h1>Login</h1>
-        <form @submit.prevent="handleLogin">
-            <div>
-                <label>Username</label>
+    <div class="auth-container card">
+        <h1>登录</h1>
+        <form @submit.prevent="handleSubmit">
+            <div class="field">
+                <label>用户名</label>
                 <input v-model="username" type="text" required />
             </div>
-            <div>
-                <label>Password</label>
+            <div class="field">
+                <label>密码</label>
                 <input v-model="password" type="password" required />
             </div>
             <p v-if="error" class="error">{{ error }}</p>
-            <button type="submit" :disabled="loading">
-                {{ loading ? 'Logging in...' : 'Login' }}
+            <button type="submit" :disabled="loading" class="btn-primary">
+                {{ loading ? '登录中...' : '登录' }}
             </button>
         </form>
-        <p>
-            Don't have an account? <router-link to="/register">Register</router-link>
+        <p class="switch">
+            还没有账号？<router-link to="/register">立即注册</router-link>
         </p>
     </div>
 </template>
 
 <style scoped>
 .auth-container {
-    max-width: 400px;
-    margin: 50px auto;
-}
-
-.error {
-    color: red;
+    margin-top: 10vh;
 }
 </style>
