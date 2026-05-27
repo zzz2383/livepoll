@@ -1,4 +1,5 @@
 # polls/services.py
+from django.utils import timezone 
 from .models import Poll
 from .repositories import PollRepository, VoteRepository
 from .infrastructure.redis_counter import RedisVoteCounter
@@ -77,3 +78,11 @@ class PollService:
             'created_at': poll.created_at.isoformat(),
             'has_voted': has_voted
         }
+    
+    def close_expired_polls(self):
+        now = timezone.now()
+        expired_polls = self.poll_repo.get_expired_open_polls(now)
+        for poll in expired_polls:
+            self.poll_repo.close_poll(poll)
+            # 通过 WebSocket 通知所有监听者投票已关闭
+        self.sender.send_poll_closed(poll.id)

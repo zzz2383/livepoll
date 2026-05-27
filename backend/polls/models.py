@@ -1,4 +1,5 @@
 # polls/models.py
+from django.utils import timezone 
 from django.db import models
 from django.conf import settings  # 导入 settings
 
@@ -6,6 +7,7 @@ class Poll(models.Model):
     title = models.CharField(max_length=200)
     is_multiple = models.BooleanField(default=False)
     closes_at = models.DateTimeField(null=True, blank=True)
+    closed = models.BooleanField(default=False)  # 新增字段
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,  # 使用字符串，延迟加载
         on_delete=models.CASCADE,
@@ -14,9 +16,8 @@ class Poll(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_closed(self):
-        if self.closes_at:
-            from django.utils import timezone
-            return timezone.now() >= self.closes_at
+        if self.closed or (self.closes_at and timezone.now() >= self.closes_at):
+            return True
         return False
 
 class Option(models.Model):

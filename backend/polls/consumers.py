@@ -64,3 +64,9 @@ class PollConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def poll_exists(self, poll_id):
         return Poll.objects.filter(pk=poll_id).exists()
+    
+    async def poll_closed(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'poll_closed',
+            'payload': event['payload']
+        }))

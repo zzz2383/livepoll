@@ -20,3 +20,15 @@ class MessageSender:
                 }
             }
         )
+
+    def send_poll_closed(self, poll_id: int):
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'poll_{poll_id}',
+            {
+                'type': 'poll_closed',
+                'payload': {
+                    'poll_id': poll_id
+                }
+            }
+        )

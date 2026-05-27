@@ -25,6 +25,13 @@ class PollRepository:
     def delete_poll(self, poll: Poll):
         poll.delete()
 
+    def get_expired_open_polls(self, now):
+        return Poll.objects.filter(closes_at__lte=now, closed=False)
+
+    def close_poll(self, poll):
+        poll.closed = True
+        poll.save()
+
 class VoteRepository:
     def has_voted(self, user, poll) -> bool:
         return VoteRecord.objects.filter(user=user, poll=poll).exists()
