@@ -16,6 +16,7 @@ export interface PollDetail {
     total_votes: number
     is_closed: boolean
     created_at: string
+    has_voted: boolean
 }
 
 // 投票列表项（简略）
