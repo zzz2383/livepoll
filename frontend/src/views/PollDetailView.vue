@@ -25,6 +25,40 @@ onUnmounted(() => {
     pollStore.closeWebSocket()
 })
 
+// 倒计时
+const closesAt = computed(() => {
+    if (!pollStore.currentPoll?.closes_at) return null
+    return new Date(pollStore.currentPoll.closes_at)
+})
+const timeLeft = ref('')
+
+function updateTimeLeft() {
+    if (!closesAt.value) {
+        timeLeft.value = ''
+        return
+    }
+    const now = new Date()
+    const diff = closesAt.value.getTime() - now.getTime()
+    if (diff <= 0) {
+        timeLeft.value = 'Closed'
+        return
+    }
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+    timeLeft.value = `${hours}h ${minutes}m ${seconds}s`
+}
+
+let timer: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+    updateTimeLeft()
+    timer = setInterval(updateTimeLeft, 1000)
+})
+onUnmounted(() => {
+    if (timer) clearInterval(timer)
+    pollStore.closeWebSocket()
+})
+
 const isOpen = computed(() =>
     pollStore.currentPoll && !pollStore.currentPoll.is_closed
 )
@@ -82,6 +116,13 @@ function copyLink() {
         <h1>{{ pollStore.currentPoll.title }}</h1>
         <p>Created by {{ pollStore.currentPoll.created_by }}</p>
         <p v-if="pollStore.currentPoll.is_closed" class="closed">This poll is closed</p>
+        <!-- 在投票关闭状态后显示倒计时 -->
+        <p v-if="closesAt && !pollStore.currentPoll?.is_closed">
+            Time left: {{ timeLeft }}
+        </p>
+        <p v-else-if="pollStore.currentPoll?.is_closed" class="closed">
+            Poll closed
+        </p>
 
         <!-- 图表 -->
         <PollChart :options="pollStore.currentPoll.options" />
